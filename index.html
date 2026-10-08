@@ -5,42 +5,86 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>میکروفون هوش پلتوب</title>
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   background:#f4f8ff;
   font-family:Tahoma,Arial,sans-serif;
   color:#17324d;
-  text-align:center;
 }
 .box{
-  max-width:430px;
-  margin:40px auto;
-  padding:25px;
+  width:calc(100% - 32px);
+  max-width:400px;
+  background:#fff;
+  border-radius:24px;
+  padding:28px 22px;
+  text-align:center;
+  box-shadow:0 12px 35px rgba(23,50,77,.12);
 }
-h1{font-size:24px}
-p{line-height:1.9}
-button{
+.logo{font-size:42px;margin-bottom:8px}
+h1{margin:0 0 8px;font-size:22px}
+#status{
+  margin:18px 0;
+  padding:12px;
+  border-radius:14px;
+  background:#f4f8ff;
+  font-size:14px;
+  line-height:1.9;
+  white-space:pre-line;
+}
+.mic{
+  width:110px;
+  height:110px;
+  border-radius:50%;
   border:0;
-  border-radius:12px;
-  padding:13px 20px;
-  margin:6px;
   background:#1769d1;
   color:#fff;
-  font-size:16px;
-  font-weight:bold;
+  font-size:45px;
+  display:block;
+  margin:25px auto 18px;
 }
-button:disabled{
-  opacity:.45;
+.mic.recording{
+  background:#d83232;
+  animation:pulse 1.2s infinite;
 }
-#status{
-  margin:20px 0;
-  padding:14px;
-  border-radius:12px;
-  background:#fff;
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+  100%{transform:scale(1)}
 }
 audio{
   width:100%;
-  margin-top:15px;
+  margin:12px 0 18px;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+button.action{
+  border:0;
+  border-radius:12px;
+  padding:12px 16px;
+  font-size:14px;
+  font-weight:bold;
+  background:#1769d1;
+  color:#fff;
+}
+button.cancel{
+  background:#e9eef5;
+  color:#17324d;
+}
+button:disabled{opacity:.45}
+.hidden{display:none!important}
+.small{
+  font-size:12px;
+  color:#718096;
+  margin-top:12px;
 }
 </style>
 </head>
@@ -49,45 +93,98 @@ audio{
 
 <div class="box">
 
-<h1>🎙️ میکروفون هوش پلتوب</h1>
+<div class="logo">🎙️</div>
+<h1>میکروفون هوش پلتوب</h1>
 
-<p>
-برای شروع ضبط، دکمه زیر را بزنید و اجازه دسترسی به میکروفون را بدهید.
-</p>
+<div id="status">در حال بررسی ارتباط...</div>
 
-<div id="status">آماده ضبط</div>
+<button id="micBtn" class="mic" onclick="toggleRecording()">🎙️</button>
 
-<button id="startBtn" onclick="startRecording()">🔴 شروع ضبط</button>
-<button id="stopBtn" onclick="stopRecording()" disabled>⏹️ توقف</button>
+<audio id="player" class="hidden" controls></audio>
 
-<audio id="player" controls style="display:none"></audio>
+<div id="actions" class="actions hidden">
+<button class="action" onclick="startAgain()">🔄 ضبط مجدد</button>
+<button class="action" id="sendBtn" onclick="sendAudio()">✅ تأیید و ارسال</button>
+<button class="action cancel" onclick="cancelRecording()">❌ لغو</button>
+</div>
 
-<br>
-
-<button id="sendBtn" onclick="sendAudio()" disabled>
-✅ تأیید و ارسال
-</button>
-
-<button onclick="cancelRecording()">
-❌ لغو
-</button>
+<div class="small">صدای شما فقط برای تبدیل به متن استفاده می‌شود.</div>
 
 </div>
 
 <script>
+
 let mediaRecorder=null;
 let audioChunks=[];
 let audioBlob=null;
 let audioUrl=null;
+let stream=null;
+let recording=false;
+
+const params=new URLSearchParams(location.search);
+const target=params.get('target') || '';
+const returnOrigin=params.get('returnOrigin') || '*';
 
 const statusBox=document.getElementById('status');
-const startBtn=document.getElementById('startBtn');
-const stopBtn=document.getElementById('stopBtn');
-const sendBtn=document.getElementById('sendBtn');
+const micBtn=document.getElementById('micBtn');
 const player=document.getElementById('player');
+const actions=document.getElementById('actions');
+const sendBtn=document.getElementById('sendBtn');
 
-function setStatus(text){
-  statusBox.textContent=text;
+function setStatus(t){
+  statusBox.textContent=t;
+}
+
+function sendToOpener(message){
+
+  if(!window.opener){
+    return false;
+  }
+
+  try{
+    window.opener.postMessage(
+      message,
+      returnOrigin || '*'
+    );
+    return true;
+  }catch(error){
+    console.error(error);
+    return false;
+  }
+}
+
+window.addEventListener('load',function(){
+
+  if(!window.opener){
+
+    setStatus(
+      '❌ ارتباط با هوش پلتوب برقرار نیست.\n\n' +
+      'این صفحه باید از داخل هوش پلتوب باز شود.'
+    );
+
+    return;
+  }
+
+  setStatus(
+    '✅ ارتباط با هوش پلتوب برقرار است.\n\n' +
+    'میکروفون آماده است.'
+  );
+
+  sendToOpener({
+    type:'HOOSH_PLATOB_MIC_READY',
+    target:target
+  });
+
+});
+
+async function toggleRecording(){
+
+  if(recording){
+    stopRecording();
+  }else{
+    await startRecording();
+  }
+
 }
 
 async function startRecording(){
@@ -97,21 +194,31 @@ async function startRecording(){
     if(!navigator.mediaDevices ||
        !navigator.mediaDevices.getUserMedia){
 
-      setStatus('❌ مرورگر اجازه دسترسی به میکروفون را نمی‌دهد.');
+      setStatus('❌ مرورگر از میکروفون پشتیبانی نمی‌کند.');
       return;
     }
 
-    setStatus('🎙️ در حال درخواست اجازه میکروفون...');
+    audioChunks=[];
+    audioBlob=null;
 
-    const stream=await navigator.mediaDevices.getUserMedia({
+    if(audioUrl){
+      URL.revokeObjectURL(audioUrl);
+      audioUrl=null;
+    }
+
+    player.removeAttribute('src');
+    player.classList.add('hidden');
+    actions.classList.add('hidden');
+
+    setStatus('⏳ در حال فعال‌سازی میکروفون...');
+
+    stream=await navigator.mediaDevices.getUserMedia({
       audio:{
         echoCancellation:true,
         noiseSuppression:true,
         autoGainControl:true
       }
     });
-
-    audioChunks=[];
 
     let options={};
 
@@ -124,60 +231,81 @@ async function startRecording(){
     mediaRecorder=new MediaRecorder(stream,options);
 
     mediaRecorder.ondataavailable=function(e){
+
       if(e.data && e.data.size>0){
         audioChunks.push(e.data);
       }
+
     };
 
     mediaRecorder.onstop=function(){
 
-      const mimeType=mediaRecorder.mimeType || 'audio/webm';
+      const mimeType=
+        mediaRecorder.mimeType || 'audio/webm';
 
       audioBlob=new Blob(audioChunks,{
         type:mimeType
       });
 
-      if(audioUrl){
-        URL.revokeObjectURL(audioUrl);
-      }
-
       audioUrl=URL.createObjectURL(audioBlob);
 
       player.src=audioUrl;
-      player.style.display='block';
+      player.classList.remove('hidden');
 
+      actions.classList.remove('hidden');
       sendBtn.disabled=false;
 
-      stream.getTracks().forEach(track=>track.stop());
+      if(stream){
 
-      setStatus('✅ ضبط انجام شد. صدای ضبط‌شده را بررسی کنید.');
+        stream.getTracks().forEach(function(track){
+          track.stop();
+        });
+
+        stream=null;
+      }
+
+      recording=false;
+      micBtn.classList.remove('recording');
+      micBtn.textContent='🎙️';
+
+      setStatus(
+        '✅ ضبط انجام شد.\n\n' +
+        'صدایت را بررسی کن و «تأیید و ارسال» را بزن.'
+      );
+
     };
 
     mediaRecorder.start();
 
-    startBtn.disabled=true;
-    stopBtn.disabled=false;
-    sendBtn.disabled=true;
+    recording=true;
 
-    setStatus('🔴 در حال ضبط...');
+    micBtn.classList.add('recording');
+    micBtn.textContent='⏹️';
+
+    setStatus('🔴 در حال ضبط... برای توقف دوباره بزن');
 
   }catch(error){
 
     console.error(error);
 
+    recording=false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent='🎙️';
+
     if(error.name==='NotAllowedError'){
       setStatus('❌ اجازه دسترسی به میکروفون داده نشد.');
-    }
-    else if(error.name==='NotFoundError'){
+    }else if(error.name==='NotFoundError'){
       setStatus('❌ میکروفون پیدا نشد.');
-    }
-    else if(error.name==='NotReadableError'){
+    }else if(error.name==='NotReadableError'){
       setStatus('❌ میکروفون توسط برنامه دیگری در حال استفاده است.');
+    }else{
+      setStatus(
+        '❌ خطای میکروفون:\n'+error.message
+      );
     }
-    else{
-      setStatus('❌ خطای میکروفون: '+error.message);
-    }
+
   }
+
 }
 
 function stopRecording(){
@@ -187,9 +315,26 @@ function stopRecording(){
 
     mediaRecorder.stop();
 
-    startBtn.disabled=false;
-    stopBtn.disabled=true;
   }
+
+}
+
+function startAgain(){
+
+  if(audioUrl){
+    URL.revokeObjectURL(audioUrl);
+    audioUrl=null;
+  }
+
+  audioBlob=null;
+  audioChunks=[];
+
+  player.removeAttribute('src');
+  player.classList.add('hidden');
+  actions.classList.add('hidden');
+
+  startRecording();
+
 }
 
 function cancelRecording(){
@@ -198,6 +343,16 @@ function cancelRecording(){
      mediaRecorder.state!=='inactive'){
 
     mediaRecorder.stop();
+
+  }
+
+  if(stream){
+
+    stream.getTracks().forEach(function(track){
+      track.stop();
+    });
+
+    stream=null;
   }
 
   audioChunks=[];
@@ -209,30 +364,134 @@ function cancelRecording(){
   }
 
   player.removeAttribute('src');
-  player.style.display='none';
+  player.classList.add('hidden');
+  actions.classList.add('hidden');
 
-  startBtn.disabled=false;
-  stopBtn.disabled=true;
-  sendBtn.disabled=true;
+  recording=false;
+
+  micBtn.classList.remove('recording');
+  micBtn.textContent='🎙️';
 
   setStatus('ضبط لغو شد.');
+
 }
 
 function sendAudio(){
 
   if(!audioBlob){
+
     setStatus('❌ صدایی برای ارسال وجود ندارد.');
+    return;
+
+  }
+
+  if(!window.opener){
+
+    setStatus(
+      '❌ ارتباط با هوش پلتوب برقرار نیست.'
+    );
+
     return;
   }
 
-  setStatus('⏳ صدای ضبط‌شده آماده ارسال است.');
+  sendBtn.disabled=true;
 
-  /*
-    در مرحله بعد این قسمت را به
-    Apps Script + OpenAI Transcription
-    وصل می‌کنیم.
-  */
+  setStatus(
+    '⏳ در حال ارسال صدا به هوش پلتوب...'
+  );
+
+  const reader=new FileReader();
+
+  reader.onloadend=function(){
+
+    try{
+
+      const result=reader.result || '';
+      const base64=result.split(',')[1];
+
+      if(!base64){
+
+        sendBtn.disabled=false;
+
+        setStatus(
+          '❌ تبدیل فایل صوتی انجام نشد.'
+        );
+
+        return;
+      }
+
+      const ok=sendToOpener({
+
+        type:'HOOSH_PLATOB_AUDIO',
+
+        target:target,
+
+        base64:base64,
+
+        mimeType:
+          audioBlob.type || 'audio/webm'
+
+      });
+
+      if(!ok){
+
+        sendBtn.disabled=false;
+
+        setStatus(
+          '❌ ارسال به هوش پلتوب انجام نشد.'
+        );
+
+        return;
+      }
+
+      setStatus(
+        '✅ صدا با موفقیت ارسال شد.\n\n' +
+        'در حال برگشت به هوش پلتوب...'
+      );
+
+      setTimeout(function(){
+
+        try{
+          window.close();
+        }catch(e){}
+
+      },700);
+
+    }catch(error){
+
+      console.error(error);
+
+      sendBtn.disabled=false;
+
+      setStatus(
+        '❌ خطا در ارسال صدا:\n'+
+        error.message
+      );
+
+    }
+
+  };
+
+  reader.readAsDataURL(audioBlob);
+
 }
+
+window.addEventListener('beforeunload',function(){
+
+  if(stream){
+
+    stream.getTracks().forEach(function(track){
+      track.stop();
+    });
+
+  }
+
+  if(audioUrl){
+    URL.revokeObjectURL(audioUrl);
+  }
+
+});
+
 </script>
 
 </body>
