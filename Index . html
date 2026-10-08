@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>میکروفون هوش پلتوب</title>
+<style>
+body{
+  margin:0;
+  background:#f4f8ff;
+  font-family:Tahoma,Arial,sans-serif;
+  color:#17324d;
+  text-align:center;
+}
+.box{
+  max-width:430px;
+  margin:40px auto;
+  padding:25px;
+}
+h1{font-size:24px}
+p{line-height:1.9}
+button{
+  border:0;
+  border-radius:12px;
+  padding:13px 20px;
+  margin:6px;
+  background:#1769d1;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+}
+button:disabled{
+  opacity:.45;
+}
+#status{
+  margin:20px 0;
+  padding:14px;
+  border-radius:12px;
+  background:#fff;
+}
+audio{
+  width:100%;
+  margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>🎙️ میکروفون هوش پلتوب</h1>
+
+<p>
+برای شروع ضبط، دکمه زیر را بزنید و اجازه دسترسی به میکروفون را بدهید.
+</p>
+
+<div id="status">آماده ضبط</div>
+
+<button id="startBtn" onclick="startRecording()">🔴 شروع ضبط</button>
+<button id="stopBtn" onclick="stopRecording()" disabled>⏹️ توقف</button>
+
+<audio id="player" controls style="display:none"></audio>
+
+<br>
+
+<button id="sendBtn" onclick="sendAudio()" disabled>
+✅ تأیید و ارسال
+</button>
+
+<button onclick="cancelRecording()">
+❌ لغو
+</button>
+
+</div>
+
+<script>
+let mediaRecorder=null;
+let audioChunks=[];
+let audioBlob=null;
+let audioUrl=null;
+
+const statusBox=document.getElementById('status');
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const sendBtn=document.getElementById('sendBtn');
+const player=document.getElementById('player');
+
+function setStatus(text){
+  statusBox.textContent=text;
+}
+
+async function startRecording(){
+
+  try{
+
+    if(!navigator.mediaDevices ||
+       !navigator.mediaDevices.getUserMedia){
+
+      setStatus('❌ مرورگر اجازه دسترسی به میکروفون را نمی‌دهد.');
+      return;
+    }
+
+    setStatus('🎙️ در حال درخواست اجازه میکروفون...');
+
+    const stream=await navigator.mediaDevices.getUserMedia({
+      audio:{
+        echoCancellation:true,
+        noiseSuppression:true,
+        autoGainControl:true
+      }
+    });
+
+    audioChunks=[];
+
+    let options={};
+
+    if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus')){
+      options.mimeType='audio/webm;codecs=opus';
+    }else if(MediaRecorder.isTypeSupported('audio/webm')){
+      options.mimeType='audio/webm';
+    }
+
+    mediaRecorder=new MediaRecorder(stream,options);
+
+    mediaRecorder.ondataavailable=function(e){
+      if(e.data && e.data.size>0){
+        audioChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop=function(){
+
+      const mimeType=mediaRecorder.mimeType || 'audio/webm';
+
+      audioBlob=new Blob(audioChunks,{
+        type:mimeType
+      });
+
+      if(audioUrl){
+        URL.revokeObjectURL(audioUrl);
+      }
+
+      audioUrl=URL.createObjectURL(audioBlob);
+
+      player.src=audioUrl;
+      player.style.display='block';
+
+      sendBtn.disabled=false;
+
+      stream.getTracks().forEach(track=>track.stop());
+
+      setStatus('✅ ضبط انجام شد. صدای ضبط‌شده را بررسی کنید.');
+    };
+
+    mediaRecorder.start();
+
+    startBtn.disabled=true;
+    stopBtn.disabled=false;
+    sendBtn.disabled=true;
+
+    setStatus('🔴 در حال ضبط...');
+
+  }catch(error){
+
+    console.error(error);
+
+    if(error.name==='NotAllowedError'){
+      setStatus('❌ اجازه دسترسی به میکروفون داده نشد.');
+    }
+    else if(error.name==='NotFoundError'){
+      setStatus('❌ میکروفون پیدا نشد.');
+    }
+    else if(error.name==='NotReadableError'){
+      setStatus('❌ میکروفون توسط برنامه دیگری در حال استفاده است.');
+    }
+    else{
+      setStatus('❌ خطای میکروفون: '+error.message);
+    }
+  }
+}
+
+function stopRecording(){
+
+  if(mediaRecorder &&
+     mediaRecorder.state!=='inactive'){
+
+    mediaRecorder.stop();
+
+    startBtn.disabled=false;
+    stopBtn.disabled=true;
+  }
+}
+
+function cancelRecording(){
+
+  if(mediaRecorder &&
+     mediaRecorder.state!=='inactive'){
+
+    mediaRecorder.stop();
+  }
+
+  audioChunks=[];
+  audioBlob=null;
+
+  if(audioUrl){
+    URL.revokeObjectURL(audioUrl);
+    audioUrl=null;
+  }
+
+  player.removeAttribute('src');
+  player.style.display='none';
+
+  startBtn.disabled=false;
+  stopBtn.disabled=true;
+  sendBtn.disabled=true;
+
+  setStatus('ضبط لغو شد.');
+}
+
+function sendAudio(){
+
+  if(!audioBlob){
+    setStatus('❌ صدایی برای ارسال وجود ندارد.');
+    return;
+  }
+
+  setStatus('⏳ صدای ضبط‌شده آماده ارسال است.');
+
+  /*
+    در مرحله بعد این قسمت را به
+    Apps Script + OpenAI Transcription
+    وصل می‌کنیم.
+  */
+}
+</script>
+
+</body>
+</html>
