@@ -4,86 +4,144 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>میکروفون هوش پلتوب</title>
+
 <style>
 *{box-sizing:border-box}
+
+:root{
+  --blue:#1769d1;
+  --blue-dark:#1055ad;
+  --bg:#f4f8ff;
+  --text:#17324d;
+  --muted:#718096;
+  --border:#d9e5f4;
+}
+
 body{
   margin:0;
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:#f4f8ff;
+  background:var(--bg);
   font-family:Tahoma,Arial,sans-serif;
-  color:#17324d;
+  color:var(--text);
 }
+
 .box{
   width:calc(100% - 32px);
   max-width:400px;
   background:#fff;
-  border-radius:24px;
-  padding:28px 22px;
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:26px 20px;
   text-align:center;
-  box-shadow:0 12px 35px rgba(23,50,77,.12);
+  box-shadow:0 10px 30px rgba(23,50,77,.10);
 }
-.logo{font-size:42px;margin-bottom:8px}
-h1{margin:0 0 8px;font-size:22px}
+
+.logo{
+  font-size:40px;
+  margin-bottom:8px;
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  color:var(--blue);
+}
+
 #status{
-  margin:18px 0;
+  margin:17px 0;
   padding:12px;
-  border-radius:14px;
-  background:#f4f8ff;
+  border-radius:13px;
+  background:var(--bg);
+  border:1px solid var(--border);
   font-size:14px;
   line-height:1.9;
   white-space:pre-line;
 }
+
 .mic{
-  width:110px;
-  height:110px;
+  width:104px;
+  height:104px;
   border-radius:50%;
-  border:0;
-  background:#1769d1;
-  color:#fff;
-  font-size:45px;
+  border:3px solid var(--blue);
+  background:#fff;
+  color:var(--blue);
+  font-size:43px;
   display:block;
-  margin:25px auto 18px;
+  margin:23px auto 17px;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(23,105,209,.15);
 }
+
+.mic:hover{
+  background:#f4f8ff;
+}
+
 .mic.recording{
-  background:#d83232;
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
   animation:pulse 1.2s infinite;
 }
+
 @keyframes pulse{
   0%{transform:scale(1)}
-  50%{transform:scale(1.06)}
+  50%{transform:scale(1.05)}
   100%{transform:scale(1)}
 }
+
 audio{
   width:100%;
-  margin:12px 0 18px;
+  margin:10px 0 17px;
 }
+
 .actions{
   display:flex;
   gap:8px;
   justify-content:center;
   flex-wrap:wrap;
 }
+
 button.action{
-  border:0;
-  border-radius:12px;
-  padding:12px 16px;
+  min-height:44px;
+  border:1px solid var(--blue);
+  border-radius:11px;
+  padding:10px 15px;
   font-size:14px;
   font-weight:bold;
-  background:#1769d1;
+  background:var(--blue);
   color:#fff;
+  cursor:pointer;
 }
+
+button.action:hover{
+  background:var(--blue-dark);
+}
+
 button.cancel{
-  background:#e9eef5;
-  color:#17324d;
+  background:#fff;
+  color:var(--blue);
 }
-button:disabled{opacity:.45}
-.hidden{display:none!important}
+
+button.cancel:hover{
+  background:var(--bg);
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.hidden{
+  display:none!important;
+}
+
 .small{
   font-size:12px;
-  color:#718096;
+  color:var(--muted);
+  line-height:1.8;
   margin-top:12px;
 }
 </style>
@@ -93,22 +151,48 @@ button:disabled{opacity:.45}
 
 <div class="box">
 
-<div class="logo">🎙️</div>
-<h1>میکروفون هوش پلتوب</h1>
+  <div class="logo">🎙️</div>
 
-<div id="status">در حال بررسی ارتباط...</div>
+  <h1>میکروفون هوش پلتوب</h1>
 
-<button id="micBtn" class="mic" onclick="toggleRecording()">🎙️</button>
+  <div id="status">در حال بررسی ارتباط...</div>
 
-<audio id="player" class="hidden" controls></audio>
+  <button
+    id="micBtn"
+    class="mic"
+    onclick="toggleRecording()"
+    aria-label="ضبط صدا"
+  >🎙️</button>
 
-<div id="actions" class="actions hidden">
-<button class="action" onclick="startAgain()">🔄 ضبط مجدد</button>
-<button class="action" id="sendBtn" onclick="sendAudio()">✅ تأیید و ارسال</button>
-<button class="action cancel" onclick="cancelRecording()">❌ لغو</button>
-</div>
+  <audio
+    id="player"
+    class="hidden"
+    controls
+  ></audio>
 
-<div class="small">صدای شما فقط برای تبدیل به متن استفاده می‌شود.</div>
+  <div id="actions" class="actions hidden">
+
+    <button
+      class="action"
+      onclick="startAgain()"
+    >🔄 ضبط مجدد</button>
+
+    <button
+      class="action"
+      id="sendBtn"
+      onclick="sendAudio()"
+    >✓ تأیید و ارسال</button>
+
+    <button
+      class="action cancel"
+      onclick="cancelRecording()"
+    >لغو</button>
+
+  </div>
+
+  <div class="small">
+    صدای شما فقط برای تبدیل به متن استفاده می‌شود.
+  </div>
 
 </div>
 
@@ -120,20 +204,39 @@ let audioBlob=null;
 let audioUrl=null;
 let stream=null;
 let recording=false;
+let sending=false;
 
 const params=new URLSearchParams(location.search);
-const target=params.get('target') || '';
-const returnOrigin=params.get('returnOrigin') || '*';
 
-const statusBox=document.getElementById('status');
-const micBtn=document.getElementById('micBtn');
-const player=document.getElementById('player');
-const actions=document.getElementById('actions');
-const sendBtn=document.getElementById('sendBtn');
+const target=
+  params.get('target') ||
+  params.get('targetId') ||
+  '';
 
-function setStatus(t){
-  statusBox.textContent=t;
+const returnOrigin=
+  params.get('returnOrigin') ||
+  'https://script.google.com';
+
+const statusBox=
+  document.getElementById('status');
+
+const micBtn=
+  document.getElementById('micBtn');
+
+const player=
+  document.getElementById('player');
+
+const actions=
+  document.getElementById('actions');
+
+const sendBtn=
+  document.getElementById('sendBtn');
+
+
+function setStatus(text){
+  statusBox.textContent=String(text||'');
 }
+
 
 function sendToOpener(message){
 
@@ -142,26 +245,30 @@ function sendToOpener(message){
   }
 
   try{
+
     window.opener.postMessage(
       message,
       returnOrigin || '*'
     );
+
     return true;
+
   }catch(error){
+
     console.error(error);
     return false;
+
   }
 }
 
-window.addEventListener('load',function(){
+
+function notifyReady(){
 
   if(!window.opener){
-
     setStatus(
       '❌ ارتباط با هوش پلتوب برقرار نیست.\n\n' +
       'این صفحه باید از داخل هوش پلتوب باز شود.'
     );
-
     return;
   }
 
@@ -171,30 +278,58 @@ window.addEventListener('load',function(){
   );
 
   sendToOpener({
-    type:'HOOSH_PLATOB_MIC_READY',
+    type:'HOOSHPLATOB_MIC_READY',
+    targetId:target,
     target:target
   });
 
+}
+
+
+/* ارتباط اولیه */
+window.addEventListener('load',function(){
+
+  notifyReady();
+
+  /*
+   * چند بار ارسال می‌کنیم تا اگر صفحه آکادمی
+   * کمی دیرتر آماده شد، ارتباط از دست نرود.
+   */
+  setTimeout(notifyReady,500);
+  setTimeout(notifyReady,1200);
+
 });
+
 
 async function toggleRecording(){
 
   if(recording){
     stopRecording();
-  }else{
-    await startRecording();
+    return;
   }
 
+  await startRecording();
+
 }
+
 
 async function startRecording(){
 
   try{
 
-    if(!navigator.mediaDevices ||
-       !navigator.mediaDevices.getUserMedia){
+    if(sending){
+      return;
+    }
 
-      setStatus('❌ مرورگر از میکروفون پشتیبانی نمی‌کند.');
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
+
+      setStatus(
+        '❌ مرورگر از میکروفون پشتیبانی نمی‌کند.'
+      );
+
       return;
     }
 
@@ -202,116 +337,214 @@ async function startRecording(){
     audioBlob=null;
 
     if(audioUrl){
+
       URL.revokeObjectURL(audioUrl);
       audioUrl=null;
+
     }
 
     player.removeAttribute('src');
     player.classList.add('hidden');
     actions.classList.add('hidden');
 
-    setStatus('⏳ در حال فعال‌سازی میکروفون...');
+    setStatus(
+      '⏳ در حال فعال‌سازی میکروفون...'
+    );
 
-    stream=await navigator.mediaDevices.getUserMedia({
-      audio:{
-        echoCancellation:true,
-        noiseSuppression:true,
-        autoGainControl:true
-      }
-    });
+    stream=
+      await navigator.mediaDevices.getUserMedia({
+
+        audio:{
+          echoCancellation:true,
+          noiseSuppression:true,
+          autoGainControl:true
+        }
+
+      });
+
 
     let options={};
 
-    if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus')){
-      options.mimeType='audio/webm;codecs=opus';
-    }else if(MediaRecorder.isTypeSupported('audio/webm')){
+    if(
+      window.MediaRecorder &&
+      MediaRecorder.isTypeSupported(
+        'audio/webm;codecs=opus'
+      )
+    ){
+
+      options.mimeType=
+        'audio/webm;codecs=opus';
+
+    }else if(
+      window.MediaRecorder &&
+      MediaRecorder.isTypeSupported('audio/webm')
+    ){
+
       options.mimeType='audio/webm';
+
     }
 
-    mediaRecorder=new MediaRecorder(stream,options);
 
-    mediaRecorder.ondataavailable=function(e){
+    mediaRecorder=
+      new MediaRecorder(stream,options);
 
-      if(e.data && e.data.size>0){
-        audioChunks.push(e.data);
+
+    mediaRecorder.ondataavailable=function(event){
+
+      if(
+        event.data &&
+        event.data.size>0
+      ){
+
+        audioChunks.push(event.data);
+
       }
 
     };
 
-    mediaRecorder.onstop=function(){
 
-      const mimeType=
-        mediaRecorder.mimeType || 'audio/webm';
+    mediaRecorder.onerror=function(event){
 
-      audioBlob=new Blob(audioChunks,{
-        type:mimeType
-      });
-
-      audioUrl=URL.createObjectURL(audioBlob);
-
-      player.src=audioUrl;
-      player.classList.remove('hidden');
-
-      actions.classList.remove('hidden');
-      sendBtn.disabled=false;
-
-      if(stream){
-
-        stream.getTracks().forEach(function(track){
-          track.stop();
-        });
-
-        stream=null;
-      }
-
-      recording=false;
-      micBtn.classList.remove('recording');
-      micBtn.textContent='🎙️';
+      console.error(
+        'MediaRecorder error:',
+        event
+      );
 
       setStatus(
-        '✅ ضبط انجام شد.\n\n' +
-        'صدایت را بررسی کن و «تأیید و ارسال» را بزن.'
+        '❌ هنگام ضبط صدا خطایی رخ داد.'
       );
 
     };
 
-    mediaRecorder.start();
+
+    mediaRecorder.onstop=function(){
+
+      try{
+
+        const mimeType=
+          mediaRecorder.mimeType ||
+          'audio/webm';
+
+        audioBlob=
+          new Blob(
+            audioChunks,
+            {type:mimeType}
+          );
+
+        if(!audioBlob.size){
+
+          setStatus(
+            '❌ فایل صوتی خالی است.'
+          );
+
+          cleanupStream();
+          recording=false;
+          return;
+
+        }
+
+        audioUrl=
+          URL.createObjectURL(audioBlob);
+
+        player.src=audioUrl;
+        player.classList.remove('hidden');
+
+        actions.classList.remove('hidden');
+        sendBtn.disabled=false;
+
+        cleanupStream();
+
+        recording=false;
+
+        micBtn.classList.remove('recording');
+        micBtn.textContent='🎙️';
+
+        setStatus(
+          '✅ ضبط انجام شد.\n\n' +
+          'صدایت را بررسی کن و «تأیید و ارسال» را بزن.'
+        );
+
+      }catch(error){
+
+        console.error(error);
+
+        cleanupStream();
+
+        recording=false;
+
+        micBtn.classList.remove('recording');
+        micBtn.textContent='🎙️';
+
+        setStatus(
+          '❌ پردازش فایل صوتی انجام نشد.'
+        );
+
+      }
+
+    };
+
+
+    mediaRecorder.start(250);
 
     recording=true;
 
     micBtn.classList.add('recording');
     micBtn.textContent='⏹️';
 
-    setStatus('🔴 در حال ضبط... برای توقف دوباره بزن');
+    setStatus(
+      '🔴 در حال ضبط...\n\n' +
+      'برای توقف دوباره دکمه را بزن.'
+    );
 
   }catch(error){
 
     console.error(error);
 
+    cleanupStream();
+
     recording=false;
+
     micBtn.classList.remove('recording');
     micBtn.textContent='🎙️';
 
     if(error.name==='NotAllowedError'){
-      setStatus('❌ اجازه دسترسی به میکروفون داده نشد.');
-    }else if(error.name==='NotFoundError'){
-      setStatus('❌ میکروفون پیدا نشد.');
-    }else if(error.name==='NotReadableError'){
-      setStatus('❌ میکروفون توسط برنامه دیگری در حال استفاده است.');
-    }else{
+
       setStatus(
-        '❌ خطای میکروفون:\n'+error.message
+        '❌ اجازه دسترسی به میکروفون داده نشد.'
       );
+
+    }else if(error.name==='NotFoundError'){
+
+      setStatus(
+        '❌ میکروفون پیدا نشد.'
+      );
+
+    }else if(error.name==='NotReadableError'){
+
+      setStatus(
+        '❌ میکروفون توسط برنامه دیگری در حال استفاده است.'
+      );
+
+    }else{
+
+      setStatus(
+        '❌ خطای میکروفون:\n' +
+        (error.message || error)
+      );
+
     }
 
   }
 
 }
 
+
 function stopRecording(){
 
-  if(mediaRecorder &&
-     mediaRecorder.state!=='inactive'){
+  if(
+    mediaRecorder &&
+    mediaRecorder.state!=='inactive'
+  ){
 
     mediaRecorder.stop();
 
@@ -319,52 +552,88 @@ function stopRecording(){
 
 }
 
-function startAgain(){
 
-  if(audioUrl){
-    URL.revokeObjectURL(audioUrl);
-    audioUrl=null;
-  }
-
-  audioBlob=null;
-  audioChunks=[];
-
-  player.removeAttribute('src');
-  player.classList.add('hidden');
-  actions.classList.add('hidden');
-
-  startRecording();
-
-}
-
-function cancelRecording(){
-
-  if(mediaRecorder &&
-     mediaRecorder.state!=='inactive'){
-
-    mediaRecorder.stop();
-
-  }
+function cleanupStream(){
 
   if(stream){
 
-    stream.getTracks().forEach(function(track){
-      track.stop();
-    });
+    stream
+      .getTracks()
+      .forEach(function(track){
+
+        try{
+          track.stop();
+        }catch(e){}
+
+      });
 
     stream=null;
+
   }
+
+}
+
+
+function startAgain(){
+
+  if(recording){
+    stopRecording();
+  }
+
+  if(audioUrl){
+
+    URL.revokeObjectURL(audioUrl);
+    audioUrl=null;
+
+  }
+
+  audioBlob=null;
+  audioChunks=[];
+
+  player.removeAttribute('src');
+  player.classList.add('hidden');
+
+  actions.classList.add('hidden');
+
+  sendBtn.disabled=false;
+
+  setTimeout(function(){
+    startRecording();
+  },150);
+
+}
+
+
+function cancelRecording(){
+
+  sending=false;
+
+  if(
+    mediaRecorder &&
+    mediaRecorder.state!=='inactive'
+  ){
+
+    try{
+      mediaRecorder.stop();
+    }catch(e){}
+
+  }
+
+  cleanupStream();
 
   audioChunks=[];
   audioBlob=null;
 
   if(audioUrl){
+
     URL.revokeObjectURL(audioUrl);
     audioUrl=null;
+
   }
 
   player.removeAttribute('src');
   player.classList.add('hidden');
+
   actions.classList.add('hidden');
 
   recording=false;
@@ -372,17 +641,30 @@ function cancelRecording(){
   micBtn.classList.remove('recording');
   micBtn.textContent='🎙️';
 
+  sendToOpener({
+    type:'HOOSHPLATOB_MIC_CANCEL',
+    targetId:target,
+    target:target
+  });
+
   setStatus('ضبط لغو شد.');
 
 }
 
+
 function sendAudio(){
 
-  if(!audioBlob){
-
-    setStatus('❌ صدایی برای ارسال وجود ندارد.');
+  if(sending){
     return;
+  }
 
+  if(!audioBlob || !audioBlob.size){
+
+    setStatus(
+      '❌ صدایی برای ارسال وجود ندارد.'
+    );
+
+    return;
   }
 
   if(!window.opener){
@@ -394,23 +676,48 @@ function sendAudio(){
     return;
   }
 
+  sending=true;
   sendBtn.disabled=true;
 
   setStatus(
     '⏳ در حال ارسال صدا به هوش پلتوب...'
   );
 
-  const reader=new FileReader();
+
+  const reader=
+    new FileReader();
+
+
+  reader.onerror=function(){
+
+    sending=false;
+    sendBtn.disabled=false;
+
+    setStatus(
+      '❌ خواندن فایل صوتی انجام نشد.'
+    );
+
+  };
+
 
   reader.onloadend=function(){
 
     try{
 
-      const result=reader.result || '';
-      const base64=result.split(',')[1];
+      const result=
+        reader.result || '';
+
+      const parts=
+        result.split(',');
+
+      const base64=
+        parts.length>1
+          ? parts[1]
+          : '';
 
       if(!base64){
 
+        sending=false;
         sendBtn.disabled=false;
 
         setStatus(
@@ -420,21 +727,32 @@ function sendAudio(){
         return;
       }
 
-      const ok=sendToOpener({
 
-        type:'HOOSH_PLATOB_AUDIO',
+      const mimeType=
+        audioBlob.type ||
+        'audio/webm';
 
-        target:target,
 
-        base64:base64,
+      const ok=
+        sendToOpener({
 
-        mimeType:
-          audioBlob.type || 'audio/webm'
+          type:'HOOSHPLATOB_AUDIO',
 
-      });
+          targetId:target,
+          target:target,
+
+          base64:base64,
+          audioBase64:base64,
+
+          mimeType:mimeType,
+          mime:mimeType
+
+        });
+
 
       if(!ok){
 
+        sending=false;
         sendBtn.disabled=false;
 
         setStatus(
@@ -444,10 +762,12 @@ function sendAudio(){
         return;
       }
 
+
       setStatus(
         '✅ صدا با موفقیت ارسال شد.\n\n' +
-        'در حال برگشت به هوش پلتوب...'
+        'در حال تبدیل صدا به متن...'
       );
+
 
       setTimeout(function(){
 
@@ -455,42 +775,47 @@ function sendAudio(){
           window.close();
         }catch(e){}
 
-      },700);
+      },900);
+
 
     }catch(error){
 
       console.error(error);
 
+      sending=false;
       sendBtn.disabled=false;
 
       setStatus(
-        '❌ خطا در ارسال صدا:\n'+
-        error.message
+        '❌ خطا در ارسال صدا:\n' +
+        (error.message || error)
       );
 
     }
 
   };
 
+
   reader.readAsDataURL(audioBlob);
 
 }
 
-window.addEventListener('beforeunload',function(){
 
-  if(stream){
+window.addEventListener(
+  'beforeunload',
+  function(){
 
-    stream.getTracks().forEach(function(track){
-      track.stop();
-    });
+    cleanupStream();
+
+    if(audioUrl){
+
+      try{
+        URL.revokeObjectURL(audioUrl);
+      }catch(e){}
+
+    }
 
   }
-
-  if(audioUrl){
-    URL.revokeObjectURL(audioUrl);
-  }
-
-});
+);
 
 </script>
 
